@@ -1,0 +1,12 @@
+{
+  "ipRefreshInterval": "60s",
+  "domains": [
+    {
+      "apiKey": "myApiKey",
+      "rootDomainName": "sellmair.io",
+      "targetDomainName": "test.sellmair.io",
+      "timeToLive": "5m",
+      "ipProvider": "amazon"
+    }
+  ]
+}
