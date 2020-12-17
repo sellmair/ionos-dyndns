@@ -1,5 +1,6 @@
 @file:Suppress("UNUSED_VARIABLE")
 
+import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
@@ -38,6 +39,19 @@ allprojects {
             tasks.withType<KotlinJvmTest>().configureEach {
                 testEnvironment.forEach { (key, value) -> environment(key, value) }
             }
+
+            /* Disable cross compilation */
+            afterEvaluate {
+                tasks.configureEach {
+                    if ("linux" in name.toLowerCase()) {
+                        enabled = OperatingSystem.current().isLinux
+                    }
+                    if ("macos" in name.toLowerCase()) {
+                        enabled = OperatingSystem.current().isMacOsX
+                    }
+                }
+            }
+
         }
     }
 }
