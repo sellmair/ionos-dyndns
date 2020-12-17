@@ -20,4 +20,8 @@ jobs:
         run: sudo apt-get install libcurl4-openssl-dev
 
       - name: Tests
+        env:
+          IO_SELLMAIR_IONOS_TEST_API_KEY: ${{ secrets.IO_SELLMAIR_IONOS_TEST_API_KEY }}
+          IO_SELLMAIR_IONOS_TEST_A_RECORD_DOMAIN_NAME: ${{ secrets.IO_SELLMAIR_IONOS_TEST_A_RECORD_DOMAIN_NAME }}
+          IO_SELLMAIR_IONOS_TEST_ROOT_DOMAIN: ${{ IO_SELLMAIR_IONOS_TEST_ROOT_DOMAIN }}
         run: ./gradlew check -i
