@@ -38,7 +38,7 @@ class UpdateDnsRecordTest {
         }
 
         runBlocking {
-            val result = updateDnsRecord(domain, ip, api)
+            val result = updateDnsRecord(api, domain, ip)
             assertEquals(DnsRecordUpdateResult.IonosUnauthorized, result)
         }
     }
@@ -56,7 +56,7 @@ class UpdateDnsRecordTest {
         }
 
         runBlocking {
-            val result = updateDnsRecord(domain, ip, api)
+            val result = updateDnsRecord(api, domain, ip)
             assertEquals(DnsRecordUpdateResult.MissingRootDomain, result)
         }
     }
@@ -96,7 +96,7 @@ class UpdateDnsRecordTest {
         }
 
         runBlocking {
-            val result = updateDnsRecord(domain, ip, api)
+            val result = updateDnsRecord(api, domain, ip)
             assertEquals(DnsRecordUpdateResult.MissingTargetDomain, result)
         }
     }

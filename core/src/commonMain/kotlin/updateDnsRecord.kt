@@ -22,10 +22,10 @@ suspend fun updateDnsRecord(configuration: DomainConfiguration):
 
 suspend fun updateDnsRecord(
     domain: Domain, ip: IpAddress
-) = updateDnsRecord(domain, ip, ProductionApi(domain.apiKey))
+) = updateDnsRecord(ProductionApi(domain.apiKey), domain, ip)
 
 internal suspend fun updateDnsRecord(
-    domain: Domain, ip: IpAddress, api: Api
+    api: Api, domain: Domain, ip: IpAddress
 ): DnsRecordUpdateResult {
     return runCatching {
         val zone = getZone(api, domain.rootDomainName).leftOr { return it }
