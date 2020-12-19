@@ -75,6 +75,7 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_name: linuxX64-binary
           asset_path: service/build/bin/linux/releaseExecutable/ionos-dyndns-cli.kexe
+          asset_content_type: application/octet-stream
 
       - name: 'Upload macosX64 binary'
         if: matrix.os == 'macos-latest'
@@ -83,6 +84,7 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_name: macosX64-binary
           asset_path: service/build/bin/macos/releaseExecutable/ionos-dyndns-cli.kexe
+          asset_content_type: application/octet-stream
 
       - name: 'Upload jvm distribution'
         if: matrix.os == 'ubuntu-latest'
@@ -91,5 +93,6 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_name: jvm-distribution
           asset_path: service/build/distributions/ionos-dyndns-service.zip
+          asset_content_type: application/zip
 
 
