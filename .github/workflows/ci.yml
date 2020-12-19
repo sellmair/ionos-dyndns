@@ -24,4 +24,4 @@ jobs:
           IO_SELLMAIR_IONOS_TEST_API_KEY: ${{ secrets.IO_SELLMAIR_IONOS_TEST_API_KEY }}
           IO_SELLMAIR_IONOS_TEST_A_RECORD_DOMAIN_NAME: ${{ secrets.IO_SELLMAIR_IONOS_TEST_A_RECORD_DOMAIN_NAME }}
           IO_SELLMAIR_IONOS_TEST_ROOT_DOMAIN: ${{ secrets.IO_SELLMAIR_IONOS_TEST_ROOT_DOMAIN }}
-        run: ./gradlew check -i
+        run: ./gradlew check -i -s
