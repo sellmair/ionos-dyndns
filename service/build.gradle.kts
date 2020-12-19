@@ -6,11 +6,6 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-application {
-    applicationName = "ionos-dyndns-service"
-    mainClass.set("io.sellmair.ionos.dyndns.service.MainKt")
-}
-
 kotlin {
 
     /* Create targets */
@@ -65,4 +60,29 @@ kotlin {
     jvmTest.dependencies {
         implementation(kotlin("test-junit"))
     }
+}
+
+/* Configure jvm distribution */
+application {
+    applicationName = "ionos-dyndns-service"
+    mainClass.set("io.sellmair.ionos.dyndns.service.MainKt")
+}
+
+val serviceJar = tasks.register("serviceJar") {
+    dependsOn("jvmJar")
+    val inputFile = buildDir.resolve("libs/service-jvm.jar")
+    val outputFile = buildDir.resolve("libs/service.jar")
+    inputs.file(inputFile)
+    outputs.file(outputFile)
+    doLast {
+        inputFile.copyTo(outputFile, overwrite = true)
+    }
+}
+
+tasks.named("distTar") {
+    dependsOn(serviceJar)
+}
+
+tasks.named("distZip") {
+    dependsOn(serviceJar)
 }
