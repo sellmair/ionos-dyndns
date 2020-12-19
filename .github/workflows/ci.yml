@@ -6,6 +6,10 @@ on:
       - main
       - ci
   pull_request:
+    branches:
+      - master
+      - main
+      - ci
 jobs:
   build:
     strategy:
