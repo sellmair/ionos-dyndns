@@ -11,6 +11,7 @@ internal val defaultConfigurationFile: File get() = userHome.resolve(".ionos-dyn
 fun readServiceConfigurationOrNull(args: Array<String>): ServiceConfiguration? {
     val parser = ArgParser("ionos-dyndns-service")
     val configurationFilePath by parser.option(ArgType.String, "configuration", "c", "Path to configuration file")
+    val serviceMode by parser.option(ArgType.String, "mode", "m", "Service mode (deamon, persistent)")
     parser.parse(args)
 
     /* Precondition: Check if user defined file really exists and is file */
@@ -22,5 +23,7 @@ fun readServiceConfigurationOrNull(args: Array<String>): ServiceConfiguration? {
     check(!file.isDirectory) { "${file.path} is directory" }
     if (!file.exists) return null
 
-    return ServiceConfigurationDTO.fromJson(file.readText()).toServiceConfiguration()
+    return ServiceConfigurationDTO.fromJson(file.readText()).toServiceConfiguration().run {
+        copy(mode = serviceMode?.toServiceMode() ?: this.mode)
+    }
 }

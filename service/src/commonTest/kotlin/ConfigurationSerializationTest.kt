@@ -44,6 +44,7 @@ class ServiceConfigurationDTOSerializationTest {
     fun serializeAndDeserialize() {
         val configuration = ServiceConfigurationDTO(
             ipRefreshInterval = "16m",
+            mode = ServiceMode.Daemon.name,
             domains = listOf(
                 DomainConfigurationDTO(
                     apiKey = "a",
