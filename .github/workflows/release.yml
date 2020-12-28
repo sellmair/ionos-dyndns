@@ -94,5 +94,3 @@ jobs:
           asset_name: jvm-distribution
           asset_path: service/build/distributions/ionos-dyndns-service.zip
           asset_content_type: application/zip
-
-
