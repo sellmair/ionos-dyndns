@@ -40,14 +40,14 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         with:
           name: linuxX64-binary
-          path: service/build/bin/linux/releaseExecutable/ionos-dyndns-cli.kexe
+          path: service/build/bin/linux/releaseExecutable/ionos-dyndns.kexe
 
       - name: 'Upload macosX64 binary'
         if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v2
         with:
           name: macosX64-binary
-          path: service/build/bin/macos/releaseExecutable/ionos-dyndns-cli.kexe
+          path: service/build/bin/macos/releaseExecutable/ionos-dyndns.kexe
 
       - name: 'Upload jvm distribution'
         if: matrix.os == 'ubuntu-latest'
