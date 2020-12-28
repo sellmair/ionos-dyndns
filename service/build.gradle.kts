@@ -35,7 +35,7 @@ kotlin {
     /* Configure binaries */
     listOf(linux, macos).forEach { target ->
         target.binaries.executable {
-            baseName = "ionos-dyndns-cli"
+            baseName = "ionos-dyndns"
             entryPoint("io.sellmair.ionos.dyndns.service.main")
         }
     }
