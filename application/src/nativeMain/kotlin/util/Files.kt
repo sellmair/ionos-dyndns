@@ -1,9 +1,8 @@
-package io.sellmair.ionos.dyndns.service
+package io.sellmair.ionos.dyndns.util
 
 import io.ktor.utils.io.core.*
 import kotlinx.cinterop.*
 import platform.posix.*
-
 
 internal fun posixMkDir(path: String): Boolean {
     return mkdir(path, "0777".toInt(8).convert()) == 0

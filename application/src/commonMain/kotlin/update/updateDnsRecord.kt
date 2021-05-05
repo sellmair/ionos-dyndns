@@ -1,26 +1,17 @@
-package io.sellmair.ionos.dyndns.cli
+package io.sellmair.ionos.dyndns.update
 
-import io.sellmair.ionos.dyndns.cli.DnsRecordUpdateResult.*
+import io.sellmair.ionos.dyndns.api.Api
+import io.sellmair.ionos.dyndns.api.ApiResult
+import io.sellmair.ionos.dyndns.api.IpAddress
+import io.sellmair.ionos.dyndns.api.ProductionApi
+import io.sellmair.ionos.dyndns.model.*
+import io.sellmair.ionos.dyndns.update.DnsRecordUpdateResult.*
+import io.sellmair.ionos.dyndns.util.Either
+import io.sellmair.ionos.dyndns.util.leftOr
+import io.sellmair.ionos.dyndns.util.toLeft
+import io.sellmair.ionos.dyndns.util.toRight
 import kotlin.math.roundToInt
-import kotlin.time.Duration
-import kotlin.time.DurationUnit
 import kotlin.time.DurationUnit.SECONDS
-
-sealed class DnsRecordUpdateResult {
-    data class UnknownError(val throwable: Throwable) : DnsRecordUpdateResult()
-    object IonosUnauthorized : DnsRecordUpdateResult()
-    object MissingRootDomain : DnsRecordUpdateResult()
-    object MissingTargetDomain : DnsRecordUpdateResult()
-    object Success : DnsRecordUpdateResult()
-}
-
-object FailedToObtainIpAdress
-
-suspend fun updateDnsRecord(configuration: DomainConfiguration):
-    Either<DnsRecordUpdateResult, FailedToObtainIpAdress> {
-    val ip = configuration.ipProvider() ?: return FailedToObtainIpAdress.toRight()
-    return updateDnsRecord(configuration.toDomain(), ip).toLeft()
-}
 
 suspend fun updateDnsRecord(
     domain: Domain, ip: IpAddress
@@ -32,15 +23,18 @@ internal suspend fun updateDnsRecord(
     return runCatching {
         val zone = getZone(api, domain.rootDomainName).leftOr { return it }
         val dnsRecord = getDnsRecord(zone, domain.targetDomainName).leftOr { return it }
-        val dnsRecordUpdate = createDnsRecordUpdate(dnsRecord, ip, domain.timeToLive)
+        val dnsRecordUpdate = dnsRecord.toDnsRecordUpdateDTO()
+            .copy(content = ip)
+            .copy(ttl = domain.timeToLive.toDouble(SECONDS).roundToInt())
         updateDnsRecord(api, zone, dnsRecord, dnsRecordUpdate)
     }.getOrElse(::UnknownError)
 }
 
-internal suspend fun getZone(api: Api, rootDomainName: String): Either<Zone, DnsRecordUpdateResult> {
+internal suspend fun getZone(api: Api, rootDomainName: String): Either<ZoneDTO, DnsRecordUpdateFailure> {
     val zones = when (val apiResult = api.getZones()) {
         is ApiResult.Exception -> return UnknownError(apiResult.throwable).toRight()
         is ApiResult.Unauthorized -> return IonosUnauthorized.toRight()
+        is ApiResult.UnknownFailure -> return UnknownError(Throwable(apiResult.message)).toRight()
         is ApiResult.Success -> apiResult.value
     }
 
@@ -50,34 +44,27 @@ internal suspend fun getZone(api: Api, rootDomainName: String): Either<Zone, Dns
     return when (val apiResult = api.getZone(zoneDescriptor.id)) {
         is ApiResult.Exception -> UnknownError(apiResult.throwable).toRight()
         is ApiResult.Unauthorized -> IonosUnauthorized.toRight()
+        is ApiResult.UnknownFailure -> UnknownError(Throwable(apiResult.message)).toRight()
         is ApiResult.Success -> return apiResult.value.toLeft()
     }
 }
 
 internal fun getDnsRecord(
-    zone: Zone, targetDomainName: String
-): Either<DnsRecord, DnsRecordUpdateResult> {
+    zone: ZoneDTO, targetDomainName: String
+): Either<DnsRecordDTO, DnsRecordUpdateResult> {
     return zone.records
         .firstOrNull { record -> record.name == targetDomainName }?.toLeft()
         ?: MissingTargetDomain.toRight()
 }
 
-internal fun createDnsRecordUpdate(
-    dnsRecord: DnsRecord,
-    ip: IpAddress,
-    timeToLive: Duration
-): DnsRecordUpdate {
-    return dnsRecord.toDnsRecordPatch()
-        .copy(content = ip)
-        .copy(ttl = timeToLive.toDouble(SECONDS).roundToInt())
-}
 
 internal suspend fun updateDnsRecord(
-    api: Api, zone: Zone, record: DnsRecord, update: DnsRecordUpdate
+    api: Api, zone: ZoneDTO, record: DnsRecordDTO, update: DnsRecordUpdateDTO
 ): DnsRecordUpdateResult {
     return when (val apiResult = api.putRecord(zoneId = zone.id, recordId = record.id, update)) {
         is ApiResult.Exception -> UnknownError(apiResult.throwable)
         is ApiResult.Unauthorized -> IonosUnauthorized
+        is ApiResult.UnknownFailure -> UnknownError(Throwable(apiResult.message))
         is ApiResult.Success -> Success
     }
 }

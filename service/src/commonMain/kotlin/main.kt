@@ -13,14 +13,14 @@ fun main(args: Array<String>) {
 }
 
 suspend fun runService(configuration: ServiceConfiguration) {
-    val ipAdressByDomain = mutableMapOf<Domain, IpAddress>()
+    val ipAddressByDomain = mutableMapOf<Domain, IpAddress>()
     while (true) {
-        for (domainConfiguraiton in configuration.domains) {
-            val domain = domainConfiguraiton.toDomain()
-            val currentIp = ipAdressByDomain[domain]
-            val ip = domainConfiguraiton.ipProvider()
+        for (domainConfiguration in configuration.domains) {
+            val domain = domainConfiguration.toDomain()
+            val currentIp = ipAddressByDomain[domain]
+            val ip = domainConfiguration.ipProvider()
             if (ip == null) {
-                println("Failed to get ip from ${domainConfiguraiton.ipProvider}")
+                println("Failed to get ip from ${domainConfiguration.ipProvider}")
                 continue
             }
             if (ip == currentIp) {
@@ -32,7 +32,7 @@ suspend fun runService(configuration: ServiceConfiguration) {
             println("[$result]")
 
             if (result is DnsRecordUpdateResult.Success) {
-                ipAdressByDomain[domain] = ip
+                ipAddressByDomain[domain] = ip
             }
         }
         delay(configuration.ipRefreshInterval)

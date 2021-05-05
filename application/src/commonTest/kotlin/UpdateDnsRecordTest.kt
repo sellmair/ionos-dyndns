@@ -1,4 +1,13 @@
-import io.sellmair.ionos.dyndns.cli.*
+package io.sellmair.ionos.dyndns
+
+import io.sellmair.ionos.dyndns.api.Api
+import io.sellmair.ionos.dyndns.api.ApiResult
+import io.sellmair.ionos.dyndns.model.DnsRecordUpdateDTO
+import io.sellmair.ionos.dyndns.model.Domain
+import io.sellmair.ionos.dyndns.model.ZoneDTO
+import io.sellmair.ionos.dyndns.model.ZoneDescriptorDTO
+import io.sellmair.ionos.dyndns.update.DnsRecordUpdateResult
+import io.sellmair.ionos.dyndns.update.updateDnsRecord
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,24 +25,12 @@ class UpdateDnsRecordTest {
     private val ip = "10.0.0.1"
 
     @Test
-    fun failingIpProvider() {
-        val failingIpProvider = object : PublicIpProvider {
-            override suspend fun invoke(): IpAddress? = null
-        }
-
-        runBlocking {
-            val result = updateDnsRecord(domain.toDomainConfiguration(failingIpProvider))
-            assertEquals(FailedToObtainIpAdress, result.rightOrNull)
-        }
-    }
-
-    @Test
     fun unauthorizedApiResult() {
         val api = object : Api {
-            override suspend fun getZones(): ApiResult<List<ZoneDescriptor>> = ApiResult.Unauthorized("")
-            override suspend fun getZone(zoneId: String): ApiResult<Zone> = ApiResult.Unauthorized("")
+            override suspend fun getZones(): ApiResult<List<ZoneDescriptorDTO>> = ApiResult.Unauthorized("")
+            override suspend fun getZone(zoneId: String): ApiResult<ZoneDTO> = ApiResult.Unauthorized("")
             override suspend fun putRecord(
-                zoneId: String, recordId: String, update: DnsRecordUpdate
+                zoneId: String, recordId: String, update: DnsRecordUpdateDTO
             ): ApiResult<Unit> = ApiResult.Unauthorized("")
         }
 
@@ -46,10 +43,10 @@ class UpdateDnsRecordTest {
     @Test
     fun missingZone() {
         val api = object : Api {
-            override suspend fun getZones(): ApiResult<List<ZoneDescriptor>> = ApiResult.Success(emptyList())
-            override suspend fun getZone(zoneId: String): ApiResult<Zone> = throw NotImplementedError()
+            override suspend fun getZones(): ApiResult<List<ZoneDescriptorDTO>> = ApiResult.Success(emptyList())
+            override suspend fun getZone(zoneId: String): ApiResult<ZoneDTO> = throw NotImplementedError()
             override suspend fun putRecord(
-                zoneId: String, recordId: String, update: DnsRecordUpdate
+                zoneId: String, recordId: String, update: DnsRecordUpdateDTO
             ): ApiResult<Unit> {
                 throw NotImplementedError()
             }
@@ -63,24 +60,24 @@ class UpdateDnsRecordTest {
 
     @Test
     fun missingDnsRecord() {
-        val zone = Zone(
+        val zone = ZoneDTO(
             name = "sellmair.io",
             id = "zone-id",
             records = emptyList()
         )
 
-        val zoneDescriptor = ZoneDescriptor(
+        val zoneDescriptor = ZoneDescriptorDTO(
             name = zone.name,
             id = zone.id,
             type = "A"
         )
 
         val api = object : Api {
-            override suspend fun getZones(): ApiResult<List<ZoneDescriptor>> {
+            override suspend fun getZones(): ApiResult<List<ZoneDescriptorDTO>> {
                 return ApiResult.Success(listOf(zoneDescriptor))
             }
 
-            override suspend fun getZone(zoneId: String): ApiResult<Zone> {
+            override suspend fun getZone(zoneId: String): ApiResult<ZoneDTO> {
                 return if (zoneId == zone.id) {
                     ApiResult.Success(zone)
                 } else {
@@ -89,7 +86,7 @@ class UpdateDnsRecordTest {
             }
 
             override suspend fun putRecord(
-                zoneId: String, recordId: String, update: DnsRecordUpdate
+                zoneId: String, recordId: String, update: DnsRecordUpdateDTO
             ): ApiResult<Unit> {
                 throw NotImplementedError()
             }

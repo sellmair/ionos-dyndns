@@ -35,23 +35,20 @@ kotlin {
 
     /* Configure dependencies */
     commonMain.dependencies {
-        implementation("io.ktor:ktor-client-core:1.4.3")
-        implementation("io.ktor:ktor-client-serialization:1.4.3")
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1")
-        implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3")
+        implementation(libs.bundles.ktor.client.common)
+        implementation(libs.kotlinx.serialization.json)
+        implementation(libs.kotlinx.cli)
     }
     nativeMain.dependencies {
-        implementation("io.ktor:ktor-client-curl:1.4.3")
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2-native-mt")
+        implementation(libs.ktor.client.curl)
+        implementation(libs.kotlinx.coroutines.core)
     }
 
     jvmMain.dependencies {
-        implementation(kotlin("test-junit"))
-        implementation("io.ktor:ktor-client-okhttp:1.4.3")
+        implementation(libs.ktor.client.okhttp)
     }
 
     commonTest.dependencies {
-        implementation(kotlin("test-common"))
-        implementation(kotlin("test-annotations-common"))
+        implementation(libs.bundles.kotlin.test)
     }
 }

@@ -1,5 +1,7 @@
-import io.sellmair.ionos.dyndns.cli.toDuration
-import io.sellmair.ionos.dyndns.cli.toDurationOrNull
+package io.sellmair.ionos.dyndns
+
+import io.sellmair.ionos.dyndns.util.toDuration
+import io.sellmair.ionos.dyndns.util.toDurationOrNull
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

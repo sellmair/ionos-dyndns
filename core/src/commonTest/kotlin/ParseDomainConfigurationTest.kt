@@ -1,7 +1,7 @@
 import io.sellmair.ionos.dyndns.cli.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.seconds
+import kotlin.time.Duration.Companion.seconds
 
 class ParseDomainConfigurationTest {
 

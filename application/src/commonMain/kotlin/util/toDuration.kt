@@ -1,6 +1,7 @@
 @file:Suppress("MoveVariableDeclarationIntoWhen")
 
-package io.sellmair.ionos.dyndns.cli
+
+package io.sellmair.ionos.dyndns.util
 
 import kotlin.time.*
 import kotlin.time.Duration.Companion.days

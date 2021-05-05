@@ -7,8 +7,9 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
-import kotlin.time.minutes
-import kotlin.time.seconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 
 class UpdateDnsRecordIntegrationTest {
 
@@ -57,7 +58,7 @@ class UpdateDnsRecordIntegrationTest {
             "Expected correct IP address being set"
         )
         assertEquals(
-            arguments.timeToLive.inSeconds.roundToInt(), record.ttl,
+            arguments.timeToLive.toDouble(DurationUnit.SECONDS).roundToInt(), record.ttl,
             "Expected correct ttl being set"
         )
     }
@@ -113,5 +114,4 @@ class UpdateDnsRecordIntegrationTest {
         fun randomPart() = Random.nextInt(2, 99)
         return "${randomPart()}.${randomPart()}.${randomPart()}.${randomPart()}"
     }
-
 }

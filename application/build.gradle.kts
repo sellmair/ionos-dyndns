@@ -36,33 +36,41 @@ kotlin {
     listOf(linux, macos).forEach { target ->
         target.binaries.executable {
             baseName = "ionos-dyndns"
-            entryPoint("io.sellmair.ionos.dyndns.service.main")
+            entryPoint("io.sellmair.ionos.dyndns.main")
         }
     }
 
     commonMain.dependencies {
-        implementation(project(":core"))
         implementation(libs.kotlinx.cli)
+        implementation(libs.bundles.ktor.client.common)
         implementation(libs.ktor.client.serialization)
         implementation(libs.kotlinx.serialization.json)
     }
 
-
     commonTest.dependencies {
         implementation(libs.bundles.kotlin.test)
+    }
+
+    nativeMain.dependencies {
+        implementation(libs.ktor.client.curl)
+        implementation(libs.kotlinx.coroutines.core)
+    }
+
+    jvmMain.dependencies {
+        implementation(libs.ktor.client.okhttp)
     }
 }
 
 /* Configure jvm distribution */
 application {
-    applicationName = "ionos-dyndns-service"
-    mainClass.set("io.sellmair.ionos.dyndns.service.MainKt")
+    applicationName = "ionos-dyndns"
+    mainClass.set("io.sellmair.ionos.dyndns.MainKt")
 }
 
-val serviceJar = tasks.register("serviceJar") {
+val serviceJar = tasks.register("applicationJar") {
     dependsOn("jvmJar")
-    val inputFile = buildDir.resolve("libs/service-jvm.jar")
-    val outputFile = buildDir.resolve("libs/service.jar")
+    val inputFile = buildDir.resolve("libs/application-jvm.jar")
+    val outputFile = buildDir.resolve("libs/application.jar")
     inputs.file(inputFile)
     outputs.file(outputFile)
     doLast {

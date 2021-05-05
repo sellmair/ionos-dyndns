@@ -5,6 +5,7 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.required
 import kotlinx.serialization.Serializable
 import kotlin.time.*
+import kotlin.time.Duration.Companion.hours
 
 internal val defaultTimeToLive = 1.hours
 
