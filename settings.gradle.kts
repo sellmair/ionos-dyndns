@@ -15,3 +15,5 @@ pluginManagement {
 
 include(":core")
 include(":service")
+
+enableFeaturePreview("VERSION_CATALOGS")

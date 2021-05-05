@@ -42,23 +42,14 @@ kotlin {
 
     commonMain.dependencies {
         implementation(project(":core"))
-        implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3")
-        implementation("io.ktor:ktor-client-serialization:1.4.3")
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1")
+        implementation(libs.kotlinx.cli)
+        implementation(libs.ktor.client.serialization)
+        implementation(libs.kotlinx.serialization.json)
     }
 
-    jvmMain.dependencies {
-        implementation(kotlin("stdlib-jdk8"))
-    }
 
     commonTest.dependencies {
-        // MPP CORE: Why are those not added by default?
-        implementation(kotlin("test-common"))
-        implementation(kotlin("test-annotations-common"))
-    }
-
-    jvmTest.dependencies {
-        implementation(kotlin("test-junit"))
+        implementation(libs.bundles.kotlin.test)
     }
 }
 
