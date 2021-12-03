@@ -2,6 +2,8 @@ package io.sellmair.ionos.dyndns
 
 import io.sellmair.ionos.dyndns.actions.addDomain
 import io.sellmair.ionos.dyndns.actions.listDomains
+import io.sellmair.ionos.dyndns.actions.refreshDomainsDaemon
+import io.sellmair.ionos.dyndns.actions.refreshDomainsOrExit
 import io.sellmair.ionos.dyndns.util.toDuration
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
@@ -14,8 +16,8 @@ fun main(args: Array<String>) {
         is CliCommand.ListDomains -> listDomains()
         is CliCommand.AddDomain -> addDomain(command.domain)
         is CliCommand.RemoveDomain -> TODO()
-        is CliCommand.RunRefresh -> TODO()
-        is CliCommand.RunRefreshDaemon -> TODO()
+        is CliCommand.RunRefresh -> refreshDomainsOrExit()
+        is CliCommand.RunRefreshDaemon -> refreshDomainsDaemon(command.interval)
     }
 }
 
