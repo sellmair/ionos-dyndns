@@ -5,6 +5,7 @@ import io.sellmair.ionos.dyndns.api.ProductionApi
 import io.sellmair.ionos.dyndns.model.DnsRecordDTO
 import io.sellmair.ionos.dyndns.model.Domain
 import io.sellmair.ionos.dyndns.update.*
+import io.sellmair.ionos.dyndns.util.Logger
 import io.sellmair.ionos.dyndns.util.Logger.logError
 import io.sellmair.ionos.dyndns.util.Logger.logInfo
 import io.sellmair.ionos.dyndns.util.leftOr
@@ -54,7 +55,10 @@ class UpdateDnsRecordIntegrationTest {
     private suspend fun updateAndVerifyDnsRecord(
         domain: Domain, ipAddress: IpAddress
     ) {
-        updateDnsRecord(domain, ipAddress)
+        when (val result = updateDnsRecord(domain, ipAddress)) {
+            is DnsRecordUpdateFailure -> Logger.logFatal(result.toDiagnostic(domain))
+            is DnsRecordUpdateResult.Success -> Unit
+        }
 
         val record = getDnsRecord(domain)
 
@@ -75,9 +79,8 @@ class UpdateDnsRecordIntegrationTest {
                 val randomIpForThisProcess = randomIp()
                 while (true) {
                     if (getDnsRecord(domain).content == ipAddressSignallingIdle) {
-                        val updateDnsRecordResult = updateDnsRecord(api, domain = domain, ip = randomIpForThisProcess)
-                        when (updateDnsRecordResult) {
-                            is DnsRecordUpdateFailure -> logError(updateDnsRecordResult.toDiagnostic(domain))
+                        when (val updateDnsResul = updateDnsRecord(api, domain = domain, ip = randomIpForThisProcess)) {
+                            is DnsRecordUpdateFailure -> logError(updateDnsResul.toDiagnostic(domain))
                             is DnsRecordUpdateResult.Success -> logInfo("Dns lock sent")
                         }
                         logInfo("Tried to acquire dns record. Waiting 10 seconds...")

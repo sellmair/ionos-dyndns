@@ -1,6 +1,8 @@
 package io.sellmair.ionos.dyndns.util
 
 data class File(val path: String) {
+    override fun toString(): String = path
+
     companion object
 }
 

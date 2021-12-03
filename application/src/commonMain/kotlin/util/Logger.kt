@@ -2,25 +2,31 @@ package io.sellmair.ionos.dyndns.util
 
 object Logger {
 
-    data class Diagnostic(val title: String, val details: String? = null, val throwable: Throwable? = null)
+    fun logDebug(message: String) = log(LogLevel.Debug, message)
 
-    fun logPendingInfo(message: String) = print(message)
+    fun logInfo(message: String) = log(LogLevel.Info, message)
 
-    fun logInfo(message: String) = println(message)
+    fun logWarn(message: String) = log(LogLevel.Warn, message)
 
-    fun logError(diagnostic: Diagnostic) {
-        logError(message = diagnostic.title, details = diagnostic.details)
+    fun logError(message: String) = log(LogLevel.Error, message)
+
+    fun logFatal(message: String, throwable: Throwable? = null): Nothing {
+        log(LogLevel.Fatal, message)
+        throw throwable?: Throwable()
     }
 
-    fun logFatal(diagnostic: Diagnostic): Nothing {
-        logError(diagnostic)
-        throw Throwable(cause = diagnostic.throwable)
+    enum class LogLevel {
+        Debug, Info, Warn, Error, Fatal
     }
 
-    fun logError(message: String, details: String? = null) {
-        println(message.prependIndent(" > "))
-        if (details != null) {
-            println(details.prependIndent(" >  >  "))
+    fun log(level: LogLevel, message: String, throwable: Throwable? = null) {
+        println("[${level.name}] $message")
+        if (throwable != null) {
+            if (throwable.message != null) {
+                println(throwable.message)
+            }
+            println(throwable.stackTraceToString())
+            println()
         }
     }
 }

@@ -7,64 +7,79 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.sellmair.ionos.dyndns.model.DnsRecordUpdateDTO
-import io.sellmair.ionos.dyndns.model.ZoneDTO
-import io.sellmair.ionos.dyndns.model.ZoneDescriptorDTO
+import io.sellmair.ionos.dyndns.util.Logger.logFatal
+import kotlinx.coroutines.runBlocking
 
 internal sealed class ApiResult<out T> {
-    data class Exception(val throwable: Throwable) : ApiResult<Nothing>()
-    data class Unauthorized(val message: String) : ApiResult<Nothing>()
-    data class UnknownFailure(val message: String) : ApiResult<Nothing>()
+    sealed interface Failure
+    data class Exception(val throwable: Throwable) : ApiResult<Nothing>(), Failure
+    data class Unauthorized(val message: String) : ApiResult<Nothing>(), Failure
+    data class UnknownFailure(val message: String) : ApiResult<Nothing>(), Failure
     data class Success<T>(val value: T) : ApiResult<T>()
 
     fun successOrThrow(): T {
         return when (this) {
-            is Exception -> throw this.throwable
-            is Unauthorized -> throw RuntimeException("Unauthorized. Bad api key?\n$message")
-            is UnknownFailure -> throw RuntimeException("Unknown Failure: \n$message")
             is Success -> this.value
+            is Failure -> exit(this)
         }
     }
 }
 
 internal interface Api {
-    suspend fun getZones(): ApiResult<List<ZoneDescriptorDTO>>
-    suspend fun getZone(zoneId: String): ApiResult<ZoneDTO>
-    suspend fun putRecord(zoneId: String, recordId: String, update: DnsRecordUpdateDTO): ApiResult<Unit>
+    suspend fun createDyndnsBulk(dyndnsBulkDTO: DyndnsBulkDTO): ApiResult<CreatedDyndnsBulkDTO>
+    suspend fun updateDyndnsBulk(bulkId: String, dyndnsBulkDTO: DyndnsBulkDTO): ApiResult<Unit>
+    suspend fun deleteDyndnsBulk(bulkId: String): ApiResult<Unit>
+    fun close()
 }
 
-// MPP CORE: Moving this into "ProductionApi" will leak resources
-internal val client = HttpClient {
-    install(JsonFeature) {
-        serializer = KotlinxSerializer(kotlinx.serialization.json.Json {
-            ignoreUnknownKeys = true
-        })
+internal fun <T> withApi(apiKey: String, action: suspend Api.() -> T): T {
+    val api = ProductionApi(apiKey)
+    return try {
+        runBlocking { api.action() }
+    } finally {
+        api.close()
     }
-    expectSuccess = false
 }
 
-internal data class ProductionApi(
+private data class ProductionApi(
     private val apiKey: String,
-    private val baseUrl: String = "https://api.hosting.ionos.com/dns/v1"
+    private val baseUrl: String = "https://api.hosting.ionos.com/dns/v1",
 ) : Api {
-    override suspend fun getZones(): ApiResult<List<ZoneDescriptorDTO>> {
-        return defaultRequest("zones") {
-            method = HttpMethod.Get
+
+    private val client = HttpClient {
+        install(JsonFeature) {
+            serializer = KotlinxSerializer(kotlinx.serialization.json.Json {
+                ignoreUnknownKeys = true
+            })
+        }
+        expectSuccess = false
+    }
+
+    override suspend fun createDyndnsBulk(dyndnsBulkDTO: DyndnsBulkDTO): ApiResult<CreatedDyndnsBulkDTO> {
+        return defaultRequest("dyndns") {
+            contentType(ContentType.Application.Json)
+            method = HttpMethod.Post
+            body = dyndnsBulkDTO
         }
     }
 
-    override suspend fun getZone(zoneId: String): ApiResult<ZoneDTO> {
-        return defaultRequest("zones/$zoneId") {
-            method = HttpMethod.Get
-        }
-    }
-
-    override suspend fun putRecord(zoneId: String, recordId: String, update: DnsRecordUpdateDTO): ApiResult<Unit> {
-        return defaultRequest("zones/$zoneId/records/${recordId}") {
+    override suspend fun updateDyndnsBulk(bulkId: String, dyndnsBulkDTO: DyndnsBulkDTO): ApiResult<Unit> {
+        return defaultRequest("dyndns/$bulkId") {
             contentType(ContentType.Application.Json)
             method = HttpMethod.Put
-            body = update
+            body = dyndnsBulkDTO
         }
+    }
+
+    override suspend fun deleteDyndnsBulk(bulkId: String): ApiResult<Unit> {
+        return defaultRequest("dyndns/$bulkId") {
+            contentType(ContentType.Application.Json)
+            method = HttpMethod.Delete
+        }
+    }
+
+    override fun close() {
+        client.close()
     }
 
     // MPP CORE: Cannot see sources for ktor. Just see knm files =(
@@ -101,5 +116,13 @@ internal data class ProductionApi(
         } catch (t: Throwable) {
             return ApiResult.Exception(t)
         }
+    }
+}
+
+internal fun exit(failure: ApiResult.Failure): Nothing {
+    when (failure) {
+        is ApiResult.Exception -> logFatal("Unknown Error", failure.throwable)
+        is ApiResult.Unauthorized -> logFatal("Unauthorized (bad API key?): ${failure.message}")
+        is ApiResult.UnknownFailure -> logFatal("Unknown Error")
     }
 }

@@ -67,6 +67,10 @@ application {
     mainClass.set("io.sellmair.ionos.dyndns.MainKt")
 }
 
+tasks.run.configure {
+    standardInput = System.`in`
+}
+
 val serviceJar = tasks.register("applicationJar") {
     dependsOn("jvmJar")
     val inputFile = buildDir.resolve("libs/application-jvm.jar")
