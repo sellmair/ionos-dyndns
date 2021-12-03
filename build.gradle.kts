@@ -2,6 +2,7 @@
 
 import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
 
@@ -12,10 +13,17 @@ plugins {
 
 allprojects {
     repositories {
+        maven("https://maven.pkg.jetbrains.space/public/p/ktor/eap") {
+            mavenContent { includeGroup("io.ktor") }
+        }
+
+        maven("https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven") {
+            mavenContent { includeGroup("org.jetbrains.kotlinx") }
+        }
+
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/eap")
         mavenCentral()
-        jcenter()
-        maven("https://kotlin.bintray.com/kotlinx")
-        mavenLocal()
     }
 }
 
@@ -24,9 +32,9 @@ allprojects {
         extensions.getByType<KotlinMultiplatformExtension>().run {
             /* Configure Opt-Ins */
             sourceSets.all {
-                languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
-                languageSettings.useExperimentalAnnotation("kotlin.time.ExperimentalTime")
-                languageSettings.useExperimentalAnnotation("kotlin.ExperimentalUnsignedTypes")
+                languageSettings.optIn("kotlin.RequiresOptIn")
+                languageSettings.optIn("kotlin.time.ExperimentalTime")
+                languageSettings.optIn("kotlin.ExperimentalUnsignedTypes")
             }
 
             /* Configure test environment variables */
@@ -52,6 +60,11 @@ allprojects {
                 }
             }
 
+            targets.withType<KotlinNativeTarget> {
+                binaries.all {
+                    binaryOptions["memoryModel"] = "experimental"
+                }
+            }
         }
     }
 }
